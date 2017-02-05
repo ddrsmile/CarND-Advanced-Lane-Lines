@@ -36,22 +36,22 @@ class LaneMarker(object):
             r_idx = np.where(((r_base - margin < nonzerox)&(nonzerox < r_base + margin)&((nonzeroy > end) & (nonzeroy < start))))
 
             if np.sum(nonzerox[l_idx]):
-                self.l_x.extend(nonzerox[l_idx].tolist())
-                self.l_y.extend(nonzeroy[l_idx].tolist())
+                self.l_x = np.append(self.l_x, nonzerox[l_idx].tolist())
+                self.l_y = np.append(self.l_y, nonzeroy[l_idx].tolist())
             
             if np.sum(nonzerox[r_idx]):
-                self.r_x.extend(nonzerox[r_idx].tolist())
-                self.r_y.extend(nonzeroy[r_idx].tolist())
+                self.r_x = np.append(self.r_x, nonzerox[r_idx].tolist())
+                self.r_y = np.append(self.r_y, nonzeroy[r_idx].tolist())
 
 
-        self.l_x = np.array(self.l_x).astype(np.float32)
-        self.l_y = np.array(self.l_y).astype(np.float32)
-        self.r_x = np.array(self.r_x).astype(np.float32)
-        self.r_y = np.array(self.r_y).astype(np.float32)
+        self.l_x = self.l_x.astype(np.float32)
+        self.l_y = self.l_y.astype(np.float32)
+        self.r_x = self.r_x.astype(np.float32)
+        self.r_y = self.r_y.astype(np.float32)
         
         
     def fit_polynomial(self):
-        ploty = np.linspace(0, self.image.shape[0]-1, self.image.shape[0] )
+        ploty = np.linspace(0, self.image.shape[0]-1, self.image.shape[0])
         l_fit = np.polyfit(self.l_y, self.l_x, 2)
         l_fix_x = l_fit[0]*ploty**2 + l_fit[1]*ploty + l_fit[2]
         #l_fitx = l_fit[0]*self.l_y**2 + l_fit[1]*self.l_y + l_fit[2]
@@ -99,12 +99,6 @@ if __name__ == '__main__':
     ]
 
     masker.apply_channel_threshold(channels=channels, thresholds=thresholds)
-
-    #masker.apply_threshold(channel=s_channel, thresh_min=180, thresh_max=255)
-    #masker.apply_threshold(channel=l_channel, thresh_min=225, thresh_max=255)
-    #masker.apply_threshold(channel=b_channel, thresh_min=155, thresh_max=200)
-
-    #masker.apply_sobel(warped, mag_thresh=(100, 200))
 
     binaries = masker.get_binaries()
 
