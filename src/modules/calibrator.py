@@ -83,3 +83,13 @@ class Calibrator(object):
 
         with open(file_name, 'wb') as f:
             pickle.dump(out_dict, file=f)
+
+if __name__ == "__main__":
+    import numpy as np
+    import cv2
+    from glob import glob
+
+    image_paths = glob('../camera_cal/*.jpg')
+    
+    calibrator = Calibrator()
+    calibrator.calibrate(image_paths)

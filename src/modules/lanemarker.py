@@ -53,16 +53,17 @@ class LaneMarker(object):
     def fit_polynomial(self):
         ploty = np.linspace(0, self.image.shape[0]-1, self.image.shape[0])
         l_fit = np.polyfit(self.l_y, self.l_x, 2)
-        l_fix_x = l_fit[0]*ploty**2 + l_fit[1]*ploty + l_fit[2]
-        #l_fitx = l_fit[0]*self.l_y**2 + l_fit[1]*self.l_y + l_fit[2]
+        l_fit_x = l_fit[0]*ploty**2 + l_fit[1]*ploty + l_fit[2]
+        #l_fit_x = l_fit[0]*self.l_y**2 + l_fit[1]*self.l_y + l_fit[2]
         #l_x_int = l_fit[0]*720**2 + l_fit[1]*720 + l_fit[2]
 
         r_fit = np.polyfit(self.r_y, self.r_x, 2)
         r_fit_x = r_fit[0]*ploty**2 + r_fit[1]*ploty + r_fit[2]
-        #r_fitx = r_fit[0]*self.r_y**2 + r_fit[1]*self.r_y + r_fit[2]
+        #r_fit_x = r_fit[0]*self.r_y**2 + r_fit[1]*self.r_y + r_fit[2]
         #r_x_int = r_fit[0]*720**2 + r_fit[1]*720 + r_fit[2]
 
-        return l_fix_x, r_fit_x, ploty
+        return l_fit_x, r_fit_x, ploty
+        #return l_fit_x, self.l_y, r_fit_x, self.r_y
 
         
 if __name__ == '__main__':
@@ -70,9 +71,8 @@ if __name__ == '__main__':
     from calibrator import Calibrator
     from ptransformer import PTransformer
     from masker import Masker
-    import matplotlib.image as mpimg
 
-    calibrator = Calibrator('../scripts/calibration.p')
+    calibrator = Calibrator('../calibration.p')
     src = np.float32([[490, 480],[810, 480],
                       [1250, 720],[40, 720]])
     dst = np.float32([[0, 0], [1280, 0], 
@@ -108,11 +108,11 @@ if __name__ == '__main__':
     lanemarker.set_image(combined_binary)
 
     lanemarker.histogram_detection()
-    l_fix_x, r_fit_x, ploty = lanemarker.fit_polynomial()
+    l_fit_x, r_fit_x, ploty = lanemarker.fit_polynomial()
 
     warp_zero = np.zeros_like(combined_binary).astype(np.uint8)
     color_warp = np.dstack((warp_zero, warp_zero, warp_zero))
-    pts_left = np.array([np.flipud(np.transpose(np.vstack([l_fix_x, ploty])))])
+    pts_left = np.array([np.flipud(np.transpose(np.vstack([l_fit_x, ploty])))])
     pts_right = np.array([np.transpose(np.vstack([r_fit_x, ploty]))])
     pts = np.hstack((pts_left, pts_right))
     # color is in the format BGR
@@ -126,7 +126,7 @@ if __name__ == '__main__':
     ax1.imshow(cv2.cvtColor(warped, cv2.COLOR_BGR2RGB))
     ax1.set_xlim(0, 1280)
     ax1.set_ylim(0, 720)
-    ax1.plot(l_fix_x, ploty, color='green', linewidth=5)
+    ax1.plot(l_fit_x, ploty, color='green', linewidth=5)
     ax1.plot(r_fit_x, ploty, color='green', linewidth=5)
     ax1.set_title('Fit Polynomial to Lane Lines', fontsize=16)
     ax1.invert_yaxis() # to visualize as we do the images
