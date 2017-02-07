@@ -110,27 +110,45 @@ class PTransformer(object):
         return cv2.warpPerspective(image, self.inv_M, (image.shape[1], image.shape[0]), flags=cv2.INTER_LINEAR)
 
 class Masker(object):
-    def __init__(self):
-        self.binaries = []
+    def __init__(self, color_models=[], nth_elements=[], thresholds=[]):
+        self.color_models = color_models
+        self.nth_elements = nth_elements
+        self.thresholds = thresholds
     
-    def extract_channel(self, channel, thresh_min=0, thresh_max=255):
+    def apply_threshold(self, channel, thresh_min=0, thresh_max=255):
         binary = np.zeros_like(channel)
         binary[(channel >= thresh_min) & (channel <= thresh_max)] = 1
-        self.binaries.append(binary)
+        return binary
+
+    def set_channels(self, warpped_image, color_models=None, nth_elements=None):
+        channels = []
+        # use self.color_models if color_models is not given
+        color_models = color_models or self.color_models
+        # use self.nth_elements if nth_elements is not given
+        nth_elements = nth_elements or self.nth_elements
+        for model, element in zip(color_models, nth_elements):
+            channels.append(cv2.cvtColor(warpped_image, model)[:,:,element])
+
+        return channels
     
-    def combine_binary(self, binaries=None):
-        binaries = binaries or self.binaries
+    def build_binary_with_thresholds(self, channels=None, thresholds=None):
+        thresholds = thresholds or self.thresholds
+        binaries = []
+        for channel, threshold in zip(channels, thresholds):
+            binaries.append(self.apply_threshold(channel, threshold[0], threshold[1]))
+        return binaries
+    
+    def combine_binaries(self, binaries=None):
         combined_binary = np.zeros_like(binaries[0])
         for binary in binaries:
             combined_binary[(combined_binary == 1) | (binary == 1)] = 1
         return combined_binary
-    
-    def apply_channel_threshold(self, channels, thresholds):
-        for ch, thres in zip(channels, thresholds):
-            self.extract_channel(ch, thres[0], thres[1])
 
-    def get_binaries(self):
-        return self.binaries
+    def get_masked_image(self, image):
+        channels = self.set_channels(image)
+        binaries = self.build_binary_with_thresholds(channels=channels)
+        combined_binary = self.combine_binaries(binaries=binaries)
+        return combined_binary
 
 class Line(object):
     def __init__(self, n_image=1, x=None, y=None):
@@ -146,34 +164,38 @@ class Line(object):
         self.cur_poly = None
         self.avg_poly = None
 
-        def update(self, x, y):
-            self.x = x
-            self.y = y
+        if x is not None:
+            self.update(x, y)
 
-            self.n_px_frame.append(len(self.x))
-            self.cur_fit_x.extend(self.x)
+    def update(self, x, y):
+        self.x = x
+        self.y = y
 
-            if len(self.n_px_image) > self.n_image:
-                posit_to_remove = self.n_px_image.pop(0)
-                self.cur_fit_x = self.cur_fit_x[posit_to_remove:]
-            
-            self.avg_fit_x = np.mean(self.cur_fit_x)
-            self.cur_coef = np.polyfit(self.x, self.y, 2)
+        self.n_px_image.append(len(self.x))
+        self.cur_fit_x.extend(self.x)
 
-            if self.avg_coef is None:
-                self.avg_coef = self.cur_coef
-            else:
-                self.avg_coef = (self.avg_coef*(self.n_frame - 1) + self.cur_coef) / self.n_frame
-            
-            self.cur_poly = np.poly1d(self.cur_coef)
-            self.avg_poly = np.poly1d(self.avg_coef)
+        if len(self.n_px_image) > self.n_image:
+            posit_to_remove = self.n_px_image.pop(0)
+            self.cur_fit_x = self.cur_fit_x[posit_to_remove:]
+        
+        self.avg_fit_x = np.mean(self.cur_fit_x)
+        self.cur_coef = np.polyfit(self.y, self.x, 2)
+
+        if self.avg_coef is None:
+            self.avg_coef = self.cur_coef
+        else:
+            self.avg_coef = (self.avg_coef*(self.n_image - 1) + self.cur_coef) / self.n_image
+        
+        self.cur_poly = np.poly1d(self.cur_coef)
+        self.avg_poly = np.poly1d(self.avg_coef)
 
 class LaneFinder(object):
-    def __init__(self, calibrator=None, ptransformer=None, masker=None, scan_image_steps=10):
+    def __init__(self, calibrator=None, ptransformer=None, masker=None, n_image=1, scan_image_steps=10):
         self.calibrator = calibrator
         self.ptransformer = ptransformer
         self.masker = masker
-        self.image = image
+        self.scan_image_steps = scan_image_steps
+        self.n_image = n_image
         self.nonzerox = None
         self.nonzeroy = None
         self.left = None
@@ -188,45 +210,62 @@ class LaneFinder(object):
     def __set_nonzero(self, image):
         self.nonzerox, self.nonzeroy = np.nonzero(np.transpose(image))
     
+    def __get_mask(self, image):
+        ploty = np.linspace(0, image.shape[0]-1, image.shape[0])
+        mask_zero = np.zeros_like(image).astype(np.uint8)
+        color_mask = np.dstack((mask_zero, mask_zero, mask_zero))
+        pts_left = np.array([np.flipud(np.transpose(np.vstack([self.left.avg_poly(ploty), ploty])))])
+        pts_right = np.array([np.transpose(np.vstack([self.right.avg_poly(ploty), ploty]))])
+        pts = np.hstack((pts_left, pts_right))
+        # color is in the format BGR
+        cv2.polylines(color_mask, np.int_([pts]), isClosed=False, color=(0, 255, 0), thickness = 100)
+        cv2.fillPoly(color_mask, np.int_([pts]), (0, 0, 255))
+        return color_mask
+
+
+    def __annotate_image(self, mask, image):
+        color_mask = self.__get_mask(mask)
+        areawarp = self.ptransformer.inv_transform(color_mask)
+        return cv2.addWeighted(image, 1, areawarp, 0.5, 0)
+
     def histogram_detection(self, image, search_area, steps, margin=25):
         target_img = image[:, search_area[0]:search_area[1]]
         pixels_per_win = np.int(image.shape[0]/steps)
 
         ## declare the containers for histogram_dection
-        x = []
-        y = []
+        x = np.array([], dtype=np.float32)
+        y = np.array([], dtype=np.float32)
         idxs = []
         for i in range(steps):
             start = target_img.shape[0] - (i * pixels_per_win)
             end = start - pixels_per_win
 
             histogram = np.sum(target_img[end:start, :], axis=0)
-            base = np.argmax(histogram)
+            base = np.argmax(histogram) + search_area[0]
 
             idx = self.__get_idx(base, margin, end, start)
 
             if np.sum(self.nonzerox[idx]):
-                x = np.append(x, nonzerox[idx].tolist())
-                y = np.append(y, nonzeroy[idx].tolist())
+                x = np.append(x, self.nonzerox[idx].tolist())
+                y = np.append(y, self.nonzeroy[idx].tolist())
 
         return x.astype(np.float32), y.astype(np.float32)
     
     def polynomial_detection(self, image, poly, steps, margin=25):
         px_per_step = np.int(image.shape[0]/steps)
-        x = []
-        y = []
+        x = np.array([], dtype=np.float32)
+        y = np.array([], dtype=np.float32)
 
         for i in range(steps):
             start = image.shape[0] - (i * px_per_step)
             end = start - px_per_step
-
-            y_mean = np.mean(start, end)
+            y_mean = np.mean([start, end])
             x_calc = poly(y_mean)
 
             idx = self.__get_idx(x_calc, margin, end, start)
             if np.sum(self.nonzerox[idx]):
-                x = np.append(x, nonzerox[idx].tolist())
-                y = np.append(y, nonzeroy[idx].tolist())
+                x = np.append(x, self.nonzerox[idx].tolist())
+                y = np.append(y, self.nonzeroy[idx].tolist())
 
         return x.astype(np.float32), y.astype(np.float32)
 
@@ -238,33 +277,32 @@ class LaneFinder(object):
             image = self.calibrator.undistort(image)
         
         image = self.ptransformer.transform(image)
-        image = self.masker.combine_binary(image)
-
+        image = self.masker.get_masked_image(image)
         self.__set_nonzero(image)
 
-        found_l, found_r = False
+        found_l = found_r = False
         l_x = l_y = r_x = r_y = []
 
         if self.left is not None and self.right is not None:
-            l_x, l_y = self.polynomial_detection(image, self.left.avg_poly, scan_image_steps)
-            r_x, r_y = self.polynomial_detection(image, self.right.avg_poly, scan_image_steps)
+            l_x, l_y = self.polynomial_detection(image, self.left.avg_poly, self.scan_image_steps)
+            r_x, r_y = self.polynomial_detection(image, self.right.avg_poly, self.scan_image_steps)
 
             found_l = np.sum(l_x) != 0
             found_r = np.sum(r_x) != 0
         
         if not found_l:
-            l_x, l_y = self.histogram_detection(image, (0, np.int(image.shape[1]/2)), scan_image_steps)
+            l_x, l_y = self.histogram_detection(image, (0, np.int(image.shape[1]/2)), self.scan_image_steps)
             found_l = np.sum(l_x) != 0
         
         if not found_r:
-            r_x, r_y = self.histogram_detection(image, (np.int(image.shape[1]/2), image.shape[1]), scan_image_steps)
+            r_x, r_y = self.histogram_detection(image, (np.int(image.shape[1]/2), image.shape[1]), self.scan_image_steps)
             found_r = np.sum(r_x) != 0
         
         if found_l:
             if self.left:
                 self.left.update(l_x, l_y)
             else:
-                self.left = Line(self.n_iamge, l_x, l_y)
+                self.left = Line(self.n_image, l_x, l_y)
         
         if found_r:
             if self.right:
@@ -273,6 +311,7 @@ class LaneFinder(object):
                 self.right = Line(self.n_image, r_x, r_y)
 
         #TODO put results on the image
-        
-        return orig_image
+        if self.left is not None and self.right is not None:
+            orig_image = self.__annotate_image(image, orig_image)
 
+        return orig_image
