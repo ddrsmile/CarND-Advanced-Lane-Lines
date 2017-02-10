@@ -150,6 +150,19 @@ class Masker(object):
         combined_binary = self.combine_binaries(binaries=binaries)
         return combined_binary
 
+    def extract_yellow(self, image):
+        hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
+        mask = cv2.inRange(hsv, (20, 50, 150), (40, 255, 255))
+        output_binary = mask//255
+        return output_binary
+    
+    def extract_white(self, image):
+        luv = cv2.cvtColor(image, cv2.COLOR_RGB2LUV)
+        l = luv[:, :, 0]
+        output_binary = self.apply_threshold(l, thresh_min=215, thresh_max=255)
+        return output_binary
+
+
 class Line(object):
     def __init__(self, n_image=1, x=None, y=None):
         self.found = False
