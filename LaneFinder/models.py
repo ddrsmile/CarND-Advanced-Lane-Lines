@@ -109,12 +109,19 @@ class PTransformer(object):
     def inv_transform(self, image):
         return cv2.warpPerspective(image, self.inv_M, (image.shape[1], image.shape[0]), flags=cv2.INTER_LINEAR)
 
-class Masker(object):
-    def __init__(self, color_models=[], nth_chs=[], thresholds=[]):
-        self.color_models = color_models
-        self.nth_chs = nth_chs
-        self.thresholds = thresholds
-    
+class Masker(object):    
+    def get_hsv(self, image):
+        return cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
+
+    def get_lab(self, image):
+        return cv2.cvtColor(image, cv2.COLOR_RGB2Lab)
+
+    def get_hls(self, image):
+        return cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
+
+    def get_luv(self, image):
+        return cv2.cvtColor(image, cv2.COLOR_RGB2LUV)
+
     def apply_threshold(self, channel, thresh_min=0, thresh_max=255):
         binary = np.zeros_like(channel)
         binary[(channel >= thresh_min) & (channel <= thresh_max)] = 1
@@ -139,28 +146,30 @@ class Masker(object):
         return binaries
     
     def combine_binaries(self, binaries=None):
-        combined_binary = np.zeros_like(binaries[0])
-        for binary in binaries:
-            combined_binary[(combined_binary == 1) | (binary == 1)] = 1
+        #combined_binary = np.zeros_like(binaries[0])
+        #for binary in binaries:
+        #    combined_binary[(combined_binary == 1) | (binary == 1)] = 1
+        combined_binary = cv2.bitwise_or(*binaries)
         return combined_binary
     
     def get_masked_image(self, image):
-        channels = self.set_channels(image)
-        binaries = self.build_binary_with_thresholds(channels=channels)
+        #channels = self.set_channels(image)
+        #binaries = self.build_binary_with_thresholds(channels=channels)
+        binaries = []
+        binaries.append(self.extract_yellow(image))
+        binaries.append(self.extract_white(image))
         combined_binary = self.combine_binaries(binaries=binaries)
         return combined_binary
 
     def extract_yellow(self, image):
-        hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
-        mask = cv2.inRange(hsv, (20, 50, 150), (40, 255, 255))
-        output_binary = mask//255
-        return output_binary
+        hsv = self.get_hsv(image)
+        yellow = cv2.inRange(hsv, (20, 50, 150), (40, 255, 255))//255
+        return yellow
     
     def extract_white(self, image):
-        luv = cv2.cvtColor(image, cv2.COLOR_RGB2LUV)
-        l = luv[:, :, 0]
-        output_binary = self.apply_threshold(l, thresh_min=215, thresh_max=255)
-        return output_binary
+        hls = self.get_hls(image)
+        white = cv2.inRange(hls, (0, 206, 0), (180, 255, 255))//255
+        return white
 
 
 class Line(object):
@@ -179,8 +188,16 @@ class Line(object):
             self.update(x, y)
     
     @property
-    def get_avg_poly(self):
+    def avg_poly(self):
         return np.poly1d(self.avg_coef)
+    
+    @property
+    def get_cur_poly(self):
+        try:
+            return np.poly1d(self.coef[-1])
+        except IndexError:
+            return None
+        
     
     def update(self, x, y):
         cur_x = x
@@ -203,16 +220,16 @@ class Line(object):
         self.x = cur_x[sorted_idx]
         self.y = cur_y[sorted_idx]
 
-        #if self.avg_coef is None:
-        #    self.avg_coef = cur_coef
-        #else:
-        #    self.avg_coef = (self.avg_coef * (self.n_image - 1) + cur_coef) / self.n_image 
+        if self.avg_coef is None:
+            self.avg_coef = cur_coef
+        else:
+            self.avg_coef = (self.avg_coef * (self.n_image - 1) + cur_coef) / self.n_image 
 
-        self.avg_coef = [
-            np.mean([n for n, _, _ in self.coef]),
-            np.mean([n for _, n, _ in self.coef]),
-            np.mean([n for _, _, n in self.coef])
-        ]
+        #self.avg_coef = [
+        #    np.mean([n for n, _, _ in self.coef]),
+        #    np.mean([n for _, n, _ in self.coef]),
+        #    np.mean([n for _, _, n in self.coef])
+        #]
 
         avg_poly = np.poly1d(self.avg_coef)
         self.avg_fit_x = avg_poly(self.y)
@@ -220,9 +237,29 @@ class Line(object):
         if len(self.coef) > self.n_image:
             self.coef.pop(0)
 
-        if len(self.top) > self.n_image * 5:
+        if len(self.top) > self.n_image:
             self.top.pop(0)
             self.bottom.pop(0)
+    
+    @property
+    def curvature(self):
+        # define conversions in x and y from pixels space to meters
+        ym_per_px = 30. / 720. # meters per pixel in y dimension
+        xm_per_px = 3.7 / 700. # meters per pixel in x dimension
+
+        # get latest fitted polynomial function
+        cur_poly = self.get_cur_poly
+
+        # return 0 if there is no coefficient of fitted polynomial
+        if cur_poly is None:
+            return 0.
+        # cover the same range of images
+        y = np.array(np.linspace(0, 719, num=100))
+        x = np.array(list(map(cur_poly, y)))
+        y_eval = np.max(y)
+        cur_poly = np.polyfit(y * ym_per_px, x * xm_per_px, 2)
+        curverad = ((1 + (2 * cur_poly[0] * y_eval / 2. + cur_poly[1]) ** 2) ** 1.5) / np.absolute(2 * cur_poly[0])
+        return curverad
 
 
 class LaneFinder(object):
@@ -258,6 +295,13 @@ class LaneFinder(object):
         cv2.fillPoly(color_area, np.int_([pts]), (250, 40, 40))
         return color_area
 
+    def __put_text(self, image):
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        cv2.putText(image, 'Radius of Curvature = %d(m)' % self.curvature, (50, 50), font, 1, (255, 255, 255), 2)
+        left_or_right = 'left' if self.offset < 0 else 'right'
+        cv2.putText(image, 'Vehicle is %.2fm %s of center' % (np.abs(self.offset), left_or_right), (50, 100), font, 1,
+                    (255, 255, 255), 2)
+    
     def __draw_overlay(self, warp, image):
         color_warp = self.__color_warp(warp)
         color_overlay = self.ptransformer.inv_transform(color_warp)
@@ -291,31 +335,30 @@ class LaneFinder(object):
         x = np.array([], dtype=np.float32)
         y = np.array([], dtype=np.float32)
 
-        x_cur = None
-
         for i in range(steps):
             end = image.shape[0] - (i * px_per_step)
             start = end - px_per_step
             y_mean = np.mean([start, end])
             base = poly(y_mean)
 
-            good_inds_fit = self.__get_good_inds(base, margin, start, end)
-            if x_cur is not None:
-                good_inds_cur = self.__get_good_inds(base, margin, start, end)
-
-                n_fit = np.sum(self.nonzerox[good_inds_fit])
-                n_cur = np.sum(self.nonzerox[good_inds_cur])
-
-                good_inds = good_inds_fit if n_fit >= n_cur else n_cur
-            else:
-                good_inds = good_inds_fit 
+            good_inds = self.__get_good_inds(base, margin, start, end)
 
             if np.sum(self.nonzerox[good_inds]):
                 x = np.append(x, self.nonzerox[good_inds].tolist())
                 y = np.append(y, self.nonzeroy[good_inds].tolist())
-                x_cur = np.int(np.mean(self.nonzerox[good_inds]))
+
 
         return x.astype(np.float32), y.astype(np.float32)
+    
+    def remove_outlier(self, x, y, q=5):
+        if len(x) == 0 or len(y) == 0:
+            return x, y
+        
+        lower_bound = np.percentile(x, q)
+        upper_bound = np.percentile(x, 100 - q)
+        selection = (x >= lower_bound) & (x <= upper_bound)
+        return x[selection], y[selection]
+
 
     def process(self, image):
 
@@ -330,25 +373,27 @@ class LaneFinder(object):
         found_l = found_r = False
         l_x = l_y = r_x = r_y = []
         
-        #if self.left.found:
-            #l_x, l_y = self.polynomial_detection(image, self.left.get_avg_poly, self.scan_image_steps, self.margin)
-            #self.left.found = np.sum(l_x) != 0
+        if self.left.found:
+            l_x, l_y = self.polynomial_detection(image, self.left.avg_poly, self.scan_image_steps, self.margin * 3)
+            self.left.found = np.sum(l_x) != 0
         
-        #if not self.left.found:
-        l_x, l_y = self.histogram_detection(image, (0, np.int(image.shape[1]/2)), self.scan_image_steps, self.margin)
-        self.left.found = np.sum(l_x) != 0
+        if not self.left.found:
+            l_x, l_y = self.histogram_detection(image, (0, np.int(image.shape[1]/2)), self.scan_image_steps, self.margin)
+            self.left.found = np.sum(l_x) != 0
+            self.remove_outlier(l_x, l_y)
         
         if np.sum(l_y) <= 0:
             l_x = self.left.x
             l_y = self.left.y
 
-        #if self.right.found:
-            #r_x, r_y = self.polynomial_detection(image, self.right.get_avg_poly, self.scan_image_steps, self.margin)
-            #self.right.found = np.sum(r_x) != 0
+        if self.right.found:
+            r_x, r_y = self.polynomial_detection(image, self.right.avg_poly, self.scan_image_steps, self.margin * 3)
+            self.right.found = np.sum(r_x) != 0
 
-        #if not self.right.found:
-        r_x, r_y = self.histogram_detection(image, (np.int(image.shape[1]/2), image.shape[1]), self.scan_image_steps, self.margin)
-        self.right.found = np.sum(r_x) != 0
+        if not self.right.found:
+            r_x, r_y = self.histogram_detection(image, (np.int(image.shape[1]/2), image.shape[1]), self.scan_image_steps, self.margin)
+            self.right.found = np.sum(r_x) != 0
+            self.remove_outlier(r_x, r_y)
         
         if not np.sum(r_y) > 0:
             r_x = self.right.x
@@ -357,7 +402,12 @@ class LaneFinder(object):
         self.left.update(l_x, l_y)
         self.right.update(r_x, r_y)
         
+        # obtain the information of curvature and the offset of the car from the center.
+        self.curvature = np.mean([self.left.curvature, self.right.curvature])
+        center_poly = (self.left.avg_poly + self.right.avg_poly) /2
+        self.offset = (image.shape[1] / 2 - center_poly(719)) * 3.7 / 700
+
         #TODO put info on the image
         orig_image = self.__draw_overlay(image, orig_image)
-
+        self.__put_text(orig_image)
         return orig_image

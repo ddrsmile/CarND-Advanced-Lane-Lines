@@ -56,8 +56,8 @@ if __name__ == '__main__':
 
     l_ch = apply_threshold(l, 220, 255)
     b_ch = apply_threshold(b, 170, 255)
-
-    mask_old = cv2.bitwise_or(l_ch, b_ch)
+    bins = [l_ch, b_ch, yellow, white]
+    mask_old = cv2.bitwise_or(*bins)
 
     
     f, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(9, 6))

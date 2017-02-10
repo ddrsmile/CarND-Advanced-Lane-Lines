@@ -25,8 +25,8 @@ color_models = [
 nth_chs = [0, 2]
 
 thresholds = [
-        (215, 255),
-        (145, 200)
+        (220, 255),
+        (170, 255)
 ]
 
 
@@ -53,8 +53,8 @@ if __name__ == '__main__':
     import sys
     calibrator = Calibrator('../calibration.p')
     ptransformer = PTransformer(src=src, dst=dst)
-    masker = Masker(color_models=color_models, nth_chs=nth_chs, thresholds=thresholds)
-    lanefinder = LaneFinder(calibrator=calibrator, ptransformer=ptransformer, masker=masker, n_image=10, scan_image_steps=8, margin=25)
+    masker = Masker()
+    lanefinder = LaneFinder(calibrator=calibrator, ptransformer=ptransformer, masker=masker, n_image=5, scan_image_steps=10, margin=25)
 
     video_path = sys.argv[1]
 
