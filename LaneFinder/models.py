@@ -207,7 +207,7 @@ class Line(object):
         self.coef.append(cur_coef)
         cur_poly = np.poly1d(cur_coef)
         cur_top = cur_poly(0)
-        cur_bottom = cur_poly(720)
+        cur_bottom = cur_poly(719)
 
         self.top.append(cur_top)
         self.bottom.append(cur_bottom)
@@ -215,7 +215,7 @@ class Line(object):
         cur_top = np.mean(self.top)
         cur_bottom = np.mean(self.bottom)
         cur_x = np.append(cur_x, [cur_top, cur_bottom])
-        cur_y = np.append(cur_y, [0, 720])
+        cur_y = np.append(cur_y, [0, 719])
         sorted_idx = np.argsort(cur_y)
         self.x = cur_x[sorted_idx]
         self.y = cur_y[sorted_idx]
@@ -223,7 +223,8 @@ class Line(object):
         if self.avg_coef is None:
             self.avg_coef = cur_coef
         else:
-            self.avg_coef = (self.avg_coef * (self.n_image - 1) + cur_coef) / self.n_image 
+            weight = 0.4
+            self.avg_coef = (self.avg_coef * weight + cur_coef * (1 - weight))
 
         #self.avg_coef = [
         #    np.mean([n for n, _, _ in self.coef]),
