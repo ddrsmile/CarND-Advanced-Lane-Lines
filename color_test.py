@@ -54,8 +54,8 @@ if __name__ == '__main__':
     l = luv[:, :, 0]
     b = lab[:, :, 2]
 
-    l_ch = apply_threshold(l, 220, 255)
-    b_ch = apply_threshold(b, 170, 255)
+    l_ch = apply_threshold(l, 215, 255)
+    b_ch = apply_threshold(b, 145, 200)
     bins = [l_ch, b_ch, yellow, white]
     mask_old = cv2.bitwise_or(*bins)
 
@@ -65,7 +65,7 @@ if __name__ == '__main__':
     ax1.imshow(yellow, cmap='gray')
     ax1.set_title('yellow', fontsize=16)
     
-    ax2.imshow(mask_old, cmap='gray')
+    ax2.imshow(white, cmap='gray')
     ax2.set_title('white', fontsize=16)
 
     ax3.imshow(l_ch, cmap='gray')
