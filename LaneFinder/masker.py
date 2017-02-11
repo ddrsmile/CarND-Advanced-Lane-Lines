@@ -10,7 +10,18 @@ image.anything() --> use (height, width)
 numpy.anything() --> use (height, width)
 """
 
-class Masker(object):    
+class Masker(object):
+    def __init__(self, user_default=True):
+        self.user_default = user_default
+
+    def build_default_binaries(self, image):
+        binaries = []
+        binaries.append(self.extract_yellow(image))
+        binaries.append(self.extract_white(image))
+        binaries.append(self.extract_l_of_luv(image))
+        binaries.append(self.extract_b_of_lab(image))
+        return binaries
+
     def get_hsv(self, image):
         return cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
 
@@ -31,7 +42,7 @@ class Masker(object):
     def set_channels(self, warpped_image, color_models=None, nth_chs=None):
         channels = []
         # use self.color_models if color_models is not given
-        color_models = color_models or self.color_models
+        color_models = color_models
         # use self.nth_elements if nth_elements is not given
         nth_chs = nth_chs or self.nth_chs
         for model, nth_ch in zip(color_models, nth_chs):
@@ -39,22 +50,31 @@ class Masker(object):
         return channels
 
     def build_binary_with_thresholds(self, channels=None, thresholds=None):
-        thresholds = thresholds or self.thresholds
+        thresholds = thresholds
         binaries = []
         for channel, threshold in zip(channels, thresholds):
             binaries.append(self.apply_threshold(channel, threshold[0], threshold[1]))
         return binaries
 
-    def combine_binaries(self, binaries=None):
-        combined_binary = cv2.bitwise_or(*binaries)
+    def combine_binaries(self, binaries):
+        if binaries is None or len(binaries) == 0:
+            return None
+        combined_binary = np.zeros_like(binaries[0])
+        for binary in binaries:
+            combined_binary = cv2.bitwise_or(combined_binary, binary)
         return combined_binary
 
-    def get_masked_image(self, image, binaries=[]):
-        binaries.append(self.extract_yellow(image))
-        binaries.append(self.extract_white(image))
-        binaries.append(self.extract_l_of_luv(image))
-        binaries.append(self.extract_b_of_lab(image))
-        combined_binary = cv2.bitwise_or(*binaries)
+    def get_masked_image(self, image, other_binaries=None):
+
+        if self.user_default:
+            binaries = self.build_default_binaries(image)
+        else:
+            binaries = []
+        
+        if other_binaries is not None:
+            binaries.extend(other_binaries)
+
+        combined_binary = self.combine_binaries(binaries)
         return combined_binary
 
     def extract_l_of_luv(self, image):

@@ -31,8 +31,9 @@ if __name__ == '__main__':
     masker = Masker()
     lanefinder = LaneFinder(calibrator=calibrator, ptransformer=ptransformer, 
                             masker=masker, n_image=5, scan_image_steps=10, margin=25)
+    
 
-    video_path = 'videos/project_video.mp4'
+    video_path = sys.argv[1] or 'videos/project_video.mp4'
     clip1 = VideoFileClip(video_path)
     project_clip = clip1.fl_image(lanefinder.process)
     project_output = video_path[:-4] + '_result.mp4'

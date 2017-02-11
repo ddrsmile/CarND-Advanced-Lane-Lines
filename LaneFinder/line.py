@@ -70,11 +70,12 @@ class Line(object):
         self.x = cur_x[sorted_idx]
         self.y = cur_y[sorted_idx]
 
-        if self.avg_coef is None:
-            self.avg_coef = cur_coef
-        else:
+        # update self.avg_coef if there is previous one and n_image is greater 1
+        if self.avg_coef is not None and self.n_image > 1:
             weight = 0.4
             self.avg_coef = (self.avg_coef * weight + cur_coef * (1 - weight))
+        else:
+            self.avg_coef = cur_coef
 
         avg_poly = np.poly1d(self.avg_coef)
         self.avg_fit_x = avg_poly(self.y)

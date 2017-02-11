@@ -28,7 +28,10 @@ class Calibrator(object):
     def calibrate(self, image_paths, nx=9, ny=6, export=True):
         objp = np.zeros((nx * ny, 3), np.float32)
         objp[:, :2] = np.mgrid[0:nx, 0:ny].T.reshape(-1, 2)
-
+        # ensure image_paths is list type
+        # if it is not list then make it as list
+        if not isinstance(image_paths, list):
+            image_paths = list(image_paths)
         for index, image_path in enumerate(image_paths):
             image = cv2.imread(image_path)
 

@@ -10,7 +10,6 @@ class LaneFinder(object):
         self.ptransformer = ptransformer
         self.masker = masker
         self.scan_image_steps = scan_image_steps
-        self.n_image = n_image
         self.margin = margin
         self.nonzerox = None
         self.nonzeroy = None
@@ -126,7 +125,7 @@ class LaneFinder(object):
         ## perspective transform
         image = self.ptransformer.transform(image)
         ## apply threshold mask to extract lanes
-        image = self.masker.get_masked_image(image=image, binaries=[])
+        image = self.masker.get_masked_image(image=image)
 
         # set nonzero information to find the lanes
         self.__set_nonzero(image)
@@ -150,7 +149,7 @@ class LaneFinder(object):
             self.remove_outlier(l_x, l_y)
             self.left.found = np.sum(l_x) != 0
         
-        # set the previous x and y to the current x and y if there is no poits found
+        # set the previous x and y to the current x and y if there is no point found
         if np.sum(l_y) <= 0:
             l_x = self.left.x
             l_y = self.left.y
@@ -173,7 +172,7 @@ class LaneFinder(object):
             self.remove_outlier(r_x, r_y)
             self.right.found = np.sum(r_x) != 0
         
-        # set the previous x and y to the current x and y if there is no poits found
+        # set the previous x and y to the current x and y if there is no point found
         if np.sum(r_y) <= 0:
             r_x = self.right.x
             r_y = self.right.y
