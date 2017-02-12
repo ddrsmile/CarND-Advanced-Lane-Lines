@@ -58,23 +58,33 @@ class LaneFinder(object):
         # create the containers for storing found points
         x = np.array([], dtype=np.float32)
         y = np.array([], dtype=np.float32)
-
+        # variable for storing the current base
+        last_base = None
         for i in range(steps):
             # define the range in y direction for searching
             end = target_img.shape[0] - (i * px_per_step)
             start = end - px_per_step
 
-            histogram = np.sum(target_img[start:end, :], axis=0)
-            # add search_area[0], image offset in x direction, 
-            # to ensure the positions of points are correct.
-            base = np.argmax(histogram) + search_area[0]
+            if last_base is None:
+                histogram = np.sum(target_img[start:end, :], axis=0)
+                # add search_area[0], image offset in x direction, 
+                # to ensure the positions of points are correct.
+                base = np.argmax(histogram) + search_area[0]
+            else:
+                base = last_base
             # get the indices in the searching area based on "base" and "margin"
             good_inds = self.__get_good_inds(base, margin, start, end)
-
+            # get points in both x and y directions
+            cur_x, cur_y = self.nonzerox[good_inds], self.nonzeroy[good_inds]
             # append x and y if there are points found gotten by good indices
-            if np.sum(self.nonzerox[good_inds]):
-                x = np.append(x, self.nonzerox[good_inds].tolist())
-                y = np.append(y, self.nonzeroy[good_inds].tolist())
+            if np.sum(cur_x):
+                x = np.append(x, cur_x.tolist())
+                y = np.append(y, cur_y.tolist())
+                # record the base for next step if there over 50 points found
+                if np.sum(cur_x) > 50:
+                    last_base = np.int(np.mean(cur_x))
+            else:
+                last_base = None
 
         return x.astype(np.float32), y.astype(np.float32)
 
@@ -132,7 +142,8 @@ class LaneFinder(object):
         # create the containers for storing the coordinates of lanes
         l_x = l_y = r_x = r_y = []
         # get offset caused by perspective transform
-        img_offset = np.int(self.ptransformer.dst[0][0]*0.3)
+        # set the offest 0.8 of original image offest to prevent cut off the lane liens
+        img_offset = np.int(self.ptransformer.dst[0][0]*0.8)
 
         # using fitted polynomial function to find lane if lane is found in the previous image.
         if self.left.found:
