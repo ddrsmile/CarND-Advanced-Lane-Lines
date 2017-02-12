@@ -9,10 +9,10 @@ from LaneFinder.lanefinder import LaneFinder
 
 # define the windows for the perspective transform
 src = np.float32([
-    [555, 455],
-    [750, 455],
-    [1170, 720],
-    [150, 720]
+    [595, 450],
+    [690, 450],
+    [1115, 720],
+    [216, 720]
 ])
 
 dst = np.float32([

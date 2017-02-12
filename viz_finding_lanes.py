@@ -12,10 +12,10 @@ from LaneFinder.line import Line
 
 # define the windows for the perspective transform
 src = np.float32([
-    [550, 455],
-    [750, 455],
-    [1170, 720],
-    [150, 720]
+    [595, 450],
+    [690, 450],
+    [1115, 720],
+    [216, 720]
 ])
 
 dst = np.float32([
@@ -55,7 +55,7 @@ def get_good_inds(base, margin, y_low, y_high):
 def save_single_image(image, fname, fitted_lines=None):
     fig = plt.figure(figsize=(4, 2.25))
     plt.imshow(image)
-    plt.tick_params(axis='both', which='both', bottom='off', top='off', labelbottom='off', right='off', left='off', labelleft='off')
+    plt.axis('off')
     if fitted_lines is not None:
         ## draw fitted lines
         plt.plot(fitted_lines['l_x'], fitted_lines['ploty'], color='yellow')
@@ -63,7 +63,7 @@ def save_single_image(image, fname, fitted_lines=None):
         plt.xlim(0, 1280)
         plt.ylim(720, 0)
     plt.savefig('output_images/viz/viz_{}.png'.format(fname))
-    #plt.show()
+    plt.show()
     
 
 def histogram_detection(viz_img, image, search_area, steps, margin=25):
@@ -134,7 +134,7 @@ if __name__ == '__main__':
     
 
     # draw the target area where lanefinder searches the lane
-    img_offset = np.int(dst[0][0]*0.8)
+    img_offset = np.int(dst[0][0]*0.5)
     targeted = fit_img.copy()
     cv2.rectangle(targeted,(img_offset,0),(image.shape[1]//2 - 5, image.shape[0]),(255,0,0), 5)
     cv2.rectangle(targeted,(image.shape[1]//2 + 5,0),(image.shape[1] - img_offset, image.shape[0]),(0,0,255), 5)
@@ -220,5 +220,3 @@ if __name__ == '__main__':
     # put overlay on original image
     final_result = cv2.addWeighted(input_image, 1, color_area, 1, 0)
     save_single_image(final_result, 'final_result')
-
-

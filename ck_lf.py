@@ -17,8 +17,8 @@ src = np.float32([
 
 dst = np.float32([
     [450, 0],
-    [850, 0],
-    [850, 720],
+    [830, 0],
+    [830, 720],
     [450, 720]
 ])
 
@@ -53,6 +53,7 @@ if __name__ == '__main__':
         num = idx + 1
         ax = fig.add_subplot(row, col, num)
         ax.set_title("test{}".format(num))
+        ax.axis('off')
         ax.imshow(image)
     fig.tight_layout()
     plt.savefig('output_images/lanefinder_results.png')

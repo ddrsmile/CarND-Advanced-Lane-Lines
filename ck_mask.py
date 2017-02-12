@@ -29,7 +29,7 @@ if __name__ == "__main__":
     import random
     # set test image path
     image_paths = glob('test_images/test*.jpg')
-    # get random three images to show the result
+    # randomly get the images to show the result
     samples = random.sample(image_paths, 3)
     # create masker
     masker = Masker()
@@ -46,6 +46,7 @@ if __name__ == "__main__":
             num = idx + 1
             ax = fig.add_subplot(row, col, num)
             ax.set_title(title)
+            ax.axis('off')
             if title != 'original':
                 ax.imshow(image_set[title], cmap='gray')
             else:

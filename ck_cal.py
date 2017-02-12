@@ -46,8 +46,10 @@ if __name__ == '__main__':
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 3.5))
         ax1.set_title('original image')
         ax1.imshow(orig_image)
+        ax1.axis('off')
         ax2.set_title('undistorted image with corners')
         ax2.imshow(undist)
+        ax2.axis('off')
 
         fig.tight_layout()
         plt.savefig('output_images/calibrated_results.png')
@@ -65,11 +67,13 @@ if __name__ == '__main__':
         num = 2*idx + 1
         ax1 = fig.add_subplot(row, col, num)
         ax1.set_title("test{}_original".format(idx + 1))
+        ax1.axis('off')
         ax1.imshow(image)
         # apply calibrator.undist on image
         undist = calibrator.undistort(image)
         ax2 = fig.add_subplot(row, col, num+1)
         ax2.set_title("test{}_undistorted".format(idx + 1))
+        ax2.axis('off')
         ax2.imshow(undist)
 
     fig.tight_layout()

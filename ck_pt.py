@@ -9,10 +9,10 @@ from LaneFinder.lanefinder import LaneFinder
 
 # define the windows for the perspective transform
 src = np.float32([
-    [550, 455],
-    [750, 455],
-    [1170, 720],
-    [150, 720]
+    [595, 450],
+    [690, 450],
+    [1115, 720],
+    [216, 720]
 ])
 
 dst = np.float32([
@@ -57,9 +57,11 @@ if __name__ == '__main__':
         ax1 = fig.add_subplot(row, col, num)
         ax1.set_title("test{0}_original".format(idx + 1))
         ax1.imshow(orig_image)
+        ax1.axis('off')
         ax2 = fig.add_subplot(row, col, num + 1)
         ax2.set_title("test{0}_warp".format(idx + 1))
         ax2.imshow(warp)
+        ax2.axis('off')
     fig.tight_layout()
     plt.savefig('output_images/perspective_transform_results.png')
     plt.show()

@@ -64,14 +64,12 @@ class LaneFinder(object):
             # define the range in y direction for searching
             end = target_img.shape[0] - (i * px_per_step)
             start = end - px_per_step
-
-            if last_base is None:
-                histogram = np.sum(target_img[start:end, :], axis=0)
-                # add search_area[0], image offset in x direction, 
-                # to ensure the positions of points are correct.
-                base = np.argmax(histogram) + search_area[0]
-            else:
-                base = last_base
+            # create histogram
+            histogram = np.sum(target_img[start:end, :], axis=0)
+            # add search_area[0], image offset in x direction, 
+            # to ensure the positions of points are correct.
+            base = np.argmax(histogram) + search_area[0]
+            
             # get the indices in the searching area based on "base" and "margin"
             good_inds = self.__get_good_inds(base, margin, start, end)
             # get points in both x and y directions
@@ -80,9 +78,7 @@ class LaneFinder(object):
             if np.sum(cur_x):
                 x = np.append(x, cur_x.tolist())
                 y = np.append(y, cur_y.tolist())
-                # record the base for next step if there over 50 points found
-                if np.sum(cur_x) > 50:
-                    last_base = np.int(np.mean(cur_x))
+                
             else:
                 last_base = None
 
@@ -142,8 +138,8 @@ class LaneFinder(object):
         # create the containers for storing the coordinates of lanes
         l_x = l_y = r_x = r_y = []
         # get offset caused by perspective transform
-        # set the offest 0.8 of original image offest to prevent cut off the lane liens
-        img_offset = np.int(self.ptransformer.dst[0][0]*0.8)
+        # set the offest 0.5 of original image offest to prevent cut off the lane liens
+        img_offset = np.int(self.ptransformer.dst[0][0]*0.5)
 
         # using fitted polynomial function to find lane if lane is found in the previous image.
         if self.left.found:
