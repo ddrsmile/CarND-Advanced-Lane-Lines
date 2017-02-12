@@ -63,7 +63,7 @@ def save_single_image(image, fname, fitted_lines=None):
         plt.xlim(0, 1280)
         plt.ylim(720, 0)
     plt.savefig('output_images/viz/viz_{}.png'.format(fname))
-    plt.show()
+    
     
 
 def histogram_detection(viz_img, image, search_area, steps, margin=25):
@@ -81,7 +81,7 @@ def histogram_detection(viz_img, image, search_area, steps, margin=25):
         # define the range in y direction for searching
         end = target_img.shape[0] - (i * px_per_step)
         start = end - px_per_step
-
+        # set last_base to current base if there are more 50 points found in previous image
         if last_base is None:
             histogram = np.sum(target_img[start:end, :], axis=0)
             # add search_area[0], image offset in x direction, 
@@ -99,8 +99,9 @@ def histogram_detection(viz_img, image, search_area, steps, margin=25):
         if np.sum(cur_x):
             x = np.append(x, cur_x.tolist())
             y = np.append(y, cur_y.tolist())
-            if np.sum(cur_x) > 50:
-                last_base = np.int(np.mean(cur_x))
+        
+        if np.sum(cur_x) > 50:
+            last_base = np.int(np.mean(cur_x))
         else:
             last_base = None
 
@@ -121,6 +122,7 @@ def remove_outlier(x, y, q=5):
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
+    
     image = cv2.imread('test_images/test4.jpg')
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     input_image = image.copy()
@@ -220,3 +222,8 @@ if __name__ == '__main__':
     # put overlay on original image
     final_result = cv2.addWeighted(input_image, 1, color_area, 1, 0)
     save_single_image(final_result, 'final_result')
+    
+    # show all the figures
+    plt.show()
+    # clear the figure
+    plt.clf()
