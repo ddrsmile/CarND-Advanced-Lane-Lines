@@ -4,4 +4,5 @@ __pyache__
 *.pyc
 *.p
 videos/*_test.mp4
+videos/*_result.mp4
 challenge_images/
