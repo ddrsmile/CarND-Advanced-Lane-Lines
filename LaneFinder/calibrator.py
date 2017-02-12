@@ -37,7 +37,6 @@ class Calibrator(object):
 
             # confirm the image size used to calibrate is the same as the image size of viedo
             if image.shape[0] != self.image_size[0] or image.shape[1] != self.image_size[1]:
-                print(image.shape)
                 image = cv2.resize(image, self.image_size[:-1])
             # find the corners
             ret, corners = self.get_corners(image)
