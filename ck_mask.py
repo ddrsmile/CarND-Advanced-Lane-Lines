@@ -34,14 +34,14 @@ if __name__ == "__main__":
     # create masker
     masker = Masker()
 
-    for sample in samples:
+    for sidx, sample in enumerate(samples):
         image = cv2.imread(sample)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         image_set = create_image_set(masker, image)
 
         row = 3
         col = len(titles) // row if len(titles) % row == 0 else len(titles) // row + 1
-        fig = plt.figure(figsize=(5.*col, 4.*row))
+        fig = plt.figure(figsize=(5.*col, 3.5*row))
         for idx, title in enumerate(titles):
             num = idx + 1
             ax = fig.add_subplot(row, col, num)
@@ -51,6 +51,5 @@ if __name__ == "__main__":
             else:
                 ax.imshow(image_set[title])
         fig.tight_layout()
-        fname = sample.split('/')[-1][:-4]
-        plt.savefig('output_images/masker_results_{}.png'.format(fname))
+        plt.savefig('output_images/masker_results_{}.png'.format(sidx+1))
         plt.show()

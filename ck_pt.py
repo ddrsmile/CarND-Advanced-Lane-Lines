@@ -55,10 +55,10 @@ if __name__ == '__main__':
         warp = ptransformer.transform(image)
         num = 2*idx + 1
         ax1 = fig.add_subplot(row, col, num)
-        ax1.set_title("test{0}_original".format(num))
+        ax1.set_title("test{0}_original".format(idx + 1))
         ax1.imshow(orig_image)
-        ax2 = fig.add_subplot(row, col, num+1)
-        ax2.set_title("test{0}_warp".format(num))
+        ax2 = fig.add_subplot(row, col, num + 1)
+        ax2.set_title("test{0}_warp".format(idx + 1))
         ax2.imshow(warp)
     fig.tight_layout()
     plt.savefig('output_images/perspective_transform_results.png')
