@@ -19,8 +19,8 @@ class LaneFinder(object):
         self.offset = 0.0
 
     def __get_good_inds(self, base, margin, y_low, y_high):
-        return np.where((((base - margin) < self.nonzerox)&(self.nonzerox < (base + margin))&\
-                        ((self.nonzeroy > y_low) & (self.nonzeroy < y_high))))
+        return np.where((((base - margin) <= self.nonzerox)&(self.nonzerox <= (base + margin))&\
+                        ((self.nonzeroy >= y_low) & (self.nonzeroy <= y_high))))
 
     def __set_nonzero(self, image):
         self.nonzerox, self.nonzeroy = np.nonzero(np.transpose(image))
@@ -146,7 +146,7 @@ class LaneFinder(object):
             l_x, l_y = self.histogram_detection(image, 
                                                 (img_offset, np.int(image.shape[1]/2)), 
                                                 self.scan_image_steps, self.margin)
-            self.remove_outlier(l_x, l_y)
+            l_x, l_y = self.remove_outlier(l_x, l_y)
             self.left.found = np.sum(l_x) != 0
         
         # set the previous x and y to the current x and y if there is no point found
@@ -161,7 +161,7 @@ class LaneFinder(object):
         if self.right.found:
             r_x, r_y = self.polynomial_detection(image, self.right.avg_poly, 
                                                  self.scan_image_steps, self.margin)
-            self.remove_outlier(r_x, r_y)
+            r_x, r_y = self.remove_outlier(r_x, r_y)
             self.right.found = np.sum(r_x) != 0
         
         # using histogram to find lane if there is no lane found or it is the first image of the video.
