@@ -17,7 +17,7 @@ As the approach of this project, I built the models cotains following methodolog
 
 Fist of all, `camera calibration` was carried out with the given chessboard images. I defined the source (`src`) area which contains the lane lines I wanted to found by the models and the destination (`dst`) which is used to `perspective transform`. As what instruction suggested, I warpped the images into bird's-eye view. 
 
-For the third step, I applied `Color thresholding` only to extract **yellow** and **white** color. After lots of trial and error, I eventually used **L** channel of **LUV**, **b** channel of **Lab**, **yellow** area of **HVS** and **white** area of **HLS**. I did not use `Sobel thresholding` because I satisfied the results of `Color thresholding`. Hitsogram was performed to find the positions of the lane lins. Rather than using the half of image as the base, I performed histogram to find the lane lines in each window. After the lane lines are found as the points, I fitted the points with polynomail. And then I calculated the radius of curvature and the position offset with the fitted polynomail functions. 
+For the third step, I applied `Color thresholding` only to extract **yellow** and **white** color. After lots of trial and error, I eventually used **L** channel of **LUV**, **b** channel of **Lab**, **yellow** area of **HVS** and **white** area of **HLS**. I did not use `Sobel thresholding` because I satisfied the results of `Color thresholding`. Hitsogram was performed to find the positions of the lane lins. Rather than using the half of image as the base, I performed histogram to find the lane lines in each window. After the lane lines are found as the points, I fitted the points with polynomial. And then I calculated the radius of curvature and the position offset with the fitted polynomial functions. 
 
 As the final results, I drew the overlay made by fuond lane lines and put the information of the radius of curvature and position offset on the images.
 
@@ -126,7 +126,7 @@ for i in range(steps):
 
 ![viz_big_searching_window.png](output_images/viz/viz_big_searching_window.png)
 
-Besides, I added the function to remove the outlier, the points out of `95%` of total points, because I took the histogram of each slide. So that there is the chance that the `base`, center point of the searching window, locates at noisy if there is no lane in this slide.
+Besides, I added the function to remove the outlier, the points out of `95%` of total points, because I took the histogram of each slide. So that there is the chance that the `base`, center point of the searching window, locates at noisy if there is no lane in this slide. And the figure hightlight the points used to fit the polynomial functions.
 
 ![viz_lanehightlight.png](output_images/viz/viz_big_lanehightlight.png)
 
@@ -136,7 +136,17 @@ Besides, I added the function to remove the outlier, the points out of `95%` of 
 
 **<sub>line.py: update</sub>**
 
+Fitting polynomial functions are carried out by `polyfit` and `poly1d` **Numpy**. We use `polyfit` to fit 2nd order polynomial with the nonzero points found in the `histogram_detection`. The output of `polyfit` is the coefficients of a 2nd order polynomial. For convenience, I used `poly1d` to create the object which take y values as input to calcuate x values. The result of fitting polynomial is shown in the figure below. And I also hightlight the points used to fit the polynomial functions.
+
+![viz_big_fitting_result](output_images/viz/viz_big_fitting_result.png)
+
 --
+
+### Process Improvement
+
+Unlike testing the models with the images, the video output a series of continuous images. I modified `lanefinder` and built `line` model to make final result better.
+
+I added `polynomial_detection` to `lanefinder` to reduce the process of lane finding. This function will be carried out if there are lane lines found in previous image. The main idea is to use fitted polynomial function to calculate x value as new `base` with the **central point** in y direction of the `searching window`. And the following process is the same as that in `histogram_detection`.
 
 ### Radius of Curvature and Position in Lane
 
