@@ -32,7 +32,7 @@ masker = Masker()
 
 # define the basic parameter for searching lane
 scan_image_steps=10
-margin=25
+margin=50
 nonzerox = None
 nonzeroy = None
 
@@ -55,6 +55,9 @@ def get_good_inds(base, margin, y_low, y_high):
 def save_single_image(image, fname, fitted_lines=None):
     fig = plt.figure(figsize=(4, 2.25))
     plt.imshow(image)
+    a=fig.gca()
+    a.set_frame_on(False)
+    a.set_xticks([]); a.set_yticks([])
     plt.axis('off')
     if fitted_lines is not None:
         ## draw fitted lines
@@ -62,7 +65,10 @@ def save_single_image(image, fname, fitted_lines=None):
         plt.plot(fitted_lines['r_x'], fitted_lines['ploty'], color='yellow')
         plt.xlim(0, 1280)
         plt.ylim(720, 0)
-    plt.savefig('output_images/viz/viz_{}.png'.format(fname))
+    plt.savefig('output_images/viz/viz_{}.png'.format(fname), 
+                bbox_inches='tight',
+                transparent="True", 
+                pad_inches=0)
     
     
 
@@ -152,7 +158,7 @@ if __name__ == '__main__':
     ## left
     l_x, l_y = histogram_detection(targeted, binary_warped, 
                                    (img_offset, image.shape[1]//2), 
-                                   steps=scan_image_steps, margin=25)
+                                   steps=scan_image_steps, margin=margin)
     ## remove outlier
     l_x, l_y = remove_outlier(l_x, l_y)
     ## draw the found points
@@ -160,7 +166,7 @@ if __name__ == '__main__':
     ## right 
     r_x, r_y = histogram_detection(targeted, binary_warped, 
                                    (image.shape[1]//2, image.shape[1] - img_offset), 
-                                   steps=scan_image_steps, margin=25)
+                                   steps=scan_image_steps, margin=margin)
     ## remove outlier
     r_x, r_y = remove_outlier(r_x, r_y)
     ## draw the found points
