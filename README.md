@@ -28,7 +28,7 @@ As the final results, I drew the overlay made by fuond lane lines and put the in
 click the image for **youtube** videos
 
 
-## Camera Calibration
+## Camera Calibration (`calibrator.py`)
 
 In this step, I followed what the instruction taught to build my own `calibrator`. `findChessboardCorners`, `calibrateCamera` and `undistort` of _**CV2**_ were mainly used to build the model. `findChessboardCorners` is used to find the corners of the given images of chessboard after the images were grayscaled. And then `calibrateCamera` calculated the camera matrix and distortion coefficients with the corners. In order to resue the calibrated results, I implemented the mehtods to export and loading the results.
 
@@ -40,9 +40,9 @@ As the results shown below, I draw the found corners and showed the undistorted 
 
 --
 
-### Perspective Transform
+### Perspective Transform (`ptransformer.py`)
 
-`getPerspectiveTransform` was firstly used to calcuate `transform matrix M` with defined source, `src` the area to be transformed from, and destination, `dst` the area that we expect how `src` to be transformed. As the suggestion given by the instrution, it is good option that transform `src` into bird's-eye view as `dst`. Besides, I noticed that how `src` and `dst` are defined would influence on the final result, I eventually defined `src` and `dst` as follows:
+`getPerspectiveTransform` was firstly used to calcuate `transform matrix M` with defined source, `src` the area to be transformed from, and destination, `dst` the area that we expect how `src` to be transformed. As the suggestion given by the instruction, it is good option that transform `src` into bird's-eye view as `dst`. Besides, I noticed that how `src` and `dst` are defined would influence on the final result, I eventually defined `src` and `dst` as follows:
 
 |src|dst|
 |---|---|
@@ -59,7 +59,7 @@ And in the final step, we have to inverse the transformation for bird's-eye view
 
 --
 
-### Color Mask
+### Color Mask (`masker.py`)
 
 At the beginning, I followed the instruction to use **S** channel of **HSV** as `Color thresholding` and **CV2.COLOR_RBG2GRAY** for `Sobel thresholding` to extract the lane lines. The results were good but the overlay is not stable along the video. It would be shifted out of the lane lines at some part, especially for the turing parts.
 
@@ -69,25 +69,70 @@ I followed the way taught by the instruction to apply thresholding, `binary[(cha
 
 After all the masks were built with binary format, I combined all these masks as the final output of color mask. And there is figure set to show the result of each mask and final combined mask.
 
+#### Result 1
+
 ![masker_results_1](output_images/masker_results_1.png)
+
+#### Result 2
 
 ![masker_results_2](output_images/masker_results_2.png)
 
 --
 
-### Lane Finding
+### Lane Finding (`lanefinder.py: histogram_detection`)
+
+I carried out this methodology by following the instruction. The difference from the way taugh by the instruction is that I took the histogram of each slide rather than taking the histogram of half of the image. But I also implemented a check that using the mean value of the previous slide if there are over 50 points found in the previous slide. By doing this, I can use smaller width of the searching window, the area I check whether there are lane lines. It somehow can reduce the time consuming during lane finding as shown in the code below.
+
+```python
+last_base = None
+for i in range(steps):
+    # define the range in y direction for searching
+    end = target_img.shape[0] - (i * px_per_step)
+    start = end - px_per_step
+    # set last_base to current base if there are more 50 points found in previous image
+    if last_base is None:
+        # create histogram
+        histogram = np.sum(target_img[start:end, :], axis=0)
+        # add search_area[0], image offset in x direction, 
+        # to ensure the positions of points are correct.
+        base = np.argmax(histogram) + search_area[0]
+    else:
+        base = last_base
+    
+    # get the indices in the searching area based on "base" and "margin"
+    good_inds = self.__get_good_inds(base, margin, start, end)
+    # get points in both x and y directions
+    cur_x, cur_y = self.nonzerox[good_inds], self.nonzeroy[good_inds]
+    # append x and y if there are points found gotten by good indices
+    if np.sum(cur_x):
+        x = np.append(x, cur_x.tolist())
+        y = np.append(y, cur_y.tolist())
+    # store base if there are more 50 points found, otherwise set Noen to it
+    if np.sum(cur_x) > 50:
+        last_base = np.int(np.mean(cur_x))
+    else:
+        last_base = None
+```
+
+#### Searching Windows
+
+![viz_big_searching_window.png](output_images/viz/viz_big_searching_window.png)
+
+Besides, I added the function to remove the outlier, the points out of `95%` of total points, because I took the histogram of each slide. So that there is the chance that the `base`, center point of the searching window, locates at noisy if there is no lane in this slide.
+
+![viz_lanehightlight.png](output_images/viz/viz_big_lanehightlight.png)
 
 --
 
-### Fit Polynomial
+### Fit Polynomial (`line.py: update`)
 
 --
 
-### Radius of Curvature and Position in Lane
+### Radius of Curvature (`line.py: curvature`) and Position in Lane (`lanefinder.py: process`)
 
 --
 
-### Drawing Result
+### Drawing Result (`lanefinder.py: __put_text, __draw_overlay`)
 
 --
 
