@@ -28,7 +28,9 @@ As the final results, I drew the overlay made by fuond lane lines and put the in
 click the image for **youtube** videos
 
 
-## Camera Calibration (`calibrator.py`)
+## Camera Calibration
+
+**<sub>calibrator.py</sub>**
 
 In this step, I followed what the instruction taught to build my own `calibrator`. `findChessboardCorners`, `calibrateCamera` and `undistort` of _**CV2**_ were mainly used to build the model. `findChessboardCorners` is used to find the corners of the given images of chessboard after the images were grayscaled. And then `calibrateCamera` calculated the camera matrix and distortion coefficients with the corners. In order to resue the calibrated results, I implemented the mehtods to export and loading the results.
 
@@ -40,7 +42,9 @@ As the results shown below, I draw the found corners and showed the undistorted 
 
 --
 
-### Perspective Transform (`ptransformer.py`)
+### Perspective Transform
+
+**<sub>ptransformer.py</sub>**
 
 `getPerspectiveTransform` was firstly used to calcuate `transform matrix M` with defined source, `src` the area to be transformed from, and destination, `dst` the area that we expect how `src` to be transformed. As the suggestion given by the instruction, it is good option that transform `src` into bird's-eye view as `dst`. Besides, I noticed that how `src` and `dst` are defined would influence on the final result, I eventually defined `src` and `dst` as follows:
 
@@ -59,7 +63,9 @@ And in the final step, we have to inverse the transformation for bird's-eye view
 
 --
 
-### Color Mask (`masker.py`)
+### Color Mask
+
+**<sub>masker.py</sub>**
 
 At the beginning, I followed the instruction to use **S** channel of **HSV** as `Color thresholding` and **CV2.COLOR_RBG2GRAY** for `Sobel thresholding` to extract the lane lines. The results were good but the overlay is not stable along the video. It would be shifted out of the lane lines at some part, especially for the turing parts.
 
@@ -79,7 +85,9 @@ After all the masks were built with binary format, I combined all these masks as
 
 --
 
-### Lane Finding (`lanefinder.py: histogram_detection`)
+### Lane Finding
+
+**<sub>lanefinder.py: histogram_detection</sub>**
 
 I carried out this methodology by following the instruction. The difference from the way taugh by the instruction is that I took the histogram of each slide rather than taking the histogram of half of the image. But I also implemented a check that using the mean value of the previous slide if there are over 50 points found in the previous slide. By doing this, I can use smaller width of the searching window, the area I check whether there are lane lines. It somehow can reduce the time consuming during lane finding as shown in the code below.
 
@@ -124,15 +132,21 @@ Besides, I added the function to remove the outlier, the points out of `95%` of 
 
 --
 
-### Fit Polynomial (`line.py: update`)
+### Fit Polynomial
+
+**<sub>line.py: update</sub>**
 
 --
 
-### Radius of Curvature (`line.py: curvature`) and Position in Lane (`lanefinder.py: process`)
+### Radius of Curvature and Position in Lane
+
+**<sub>line.py: curvature, lanefinder.py: process</sub>**
 
 --
 
-### Drawing Result (`lanefinder.py: __put_text, __draw_overlay`)
+### Drawing Result
+
+**<sub>lanefinder.py: __put_text, __draw_overlay</sub>**
 
 --
 
