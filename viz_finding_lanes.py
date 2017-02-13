@@ -219,8 +219,40 @@ if __name__ == '__main__':
     color_area = ptransformer.inv_transform(color_area)
     save_single_image(color_area, 'inv_transform_color_area')
 
+
+    # calculate radius of curvature and position offset
+    ym_per_px = 30. / 720. # meters per pixel in y dimension
+    xm_per_px = 3.7 / 700. # meters per pixel in x dimension
+
+    y = np.array(np.linspace(0, 719, num=100))
+    y_eval = np.max(y)
+
+    # calculate radius of curvature of left lane
+    l_x = np.array(list(map(left_poly, y)))
+    l_cur_coef = np.polyfit(y * ym_per_px, l_x * xm_per_px, 2)
+    l_curverad = ((1 + (2 * l_cur_coef[0] * y_eval / 2. + l_cur_coef[1]) ** 2) ** 1.5) / np.absolute(2 * l_cur_coef[0])
+    # calculate radius of curvature of right lane
+    r_x = np.array(list(map(right_poly, y)))
+    r_cur_coef = np.polyfit(y * ym_per_px, r_x * xm_per_px, 2)
+    r_curverad = ((1 + (2 * r_cur_coef[0] * y_eval / 2. + r_cur_coef[1]) ** 2) ** 1.5) / np.absolute(2 * r_cur_coef[0])
+    # get average radius of curvature
+    curverad = np.mean([l_curverad, r_curverad])
+
+    center_poly = (left_poly + right_poly) /2
+    ## set calculated offset to self.offset
+    pos_offset = (input_image.shape[1] / 2 - center_poly(719)) * xm_per_px
+
     # put overlay on original image
     final_result = cv2.addWeighted(input_image, 1, color_area, 1, 0)
+
+    # put calculated radius of curvature and position offset on the image
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    cv2.putText(final_result, 'Radius of Curvature: {:6.2f}m'.format(curverad), (700, 50), 
+                font, 1, (255, 255, 255), 2)
+
+    left_or_right = 'left' if pos_offset < 0 else 'right'
+    cv2.putText(final_result, 'Position is {0:3.2f}m {1} of center'.format(np.abs(pos_offset), left_or_right), 
+                (700, 100), font, 1, (255, 255, 255), 2)
     save_single_image(final_result, 'final_result')
     
     # show all the figures
