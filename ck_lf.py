@@ -24,6 +24,7 @@ dst = np.float32([
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
+    import matplotlib.gridspec as gridspec
     import sys
     import cv2
     from glob import glob
@@ -43,18 +44,23 @@ if __name__ == '__main__':
                             masker=masker, n_image=1, scan_image_steps=10, margin=25)
     col = 2
     row = len(image_paths)//2 if len(image_paths) % 2 == 0 else len(image_paths)//2 + 1
-    fig = plt.figure(figsize=(5.*col, 4.*row))
-
+    fig = plt.figure()
+    gs1 = gridspec.GridSpec(row, col)
+    gs1.update(wspace=0., hspace=0.)
 
     for idx, image_path in enumerate(image_paths):
         image = cv2.imread(image_path)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         image = lanefinder.process(image)
-        num = idx + 1
-        ax = fig.add_subplot(row, col, num)
-        ax.set_title("test{}".format(num))
+        ax = plt.subplot(gs1[idx])
+        ax.title.set_visible(False)
+        ax.set_xticks([])
+        ax.set_yticks([])
         ax.axis('off')
         ax.imshow(image)
-    fig.tight_layout()
-    plt.savefig('output_images/lanefinder_results.png')
+        ax.set_aspect('auto')
+    plt.savefig('output_images/lanefinder_results.png',
+                bbox_inches='tight',
+                transparent="True", 
+                pad_inches=0)
     plt.show()

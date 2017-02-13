@@ -44,23 +44,30 @@ if __name__ == '__main__':
         cv2.drawChessboardCorners(image, (9, 6), corners, ret)
         undist = calibrator.undistort(image)
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 3.5))
+        ax1.set_frame_on(False)
+        ax1.set_xticks([])
+        ax1.set_yticks([])
         ax1.set_title('original image')
         ax1.imshow(orig_image)
         ax1.axis('off')
+        ax2.set_frame_on(False)
+        ax2.set_xticks([]) 
+        ax2.set_yticks([])
         ax2.set_title('undistorted image with corners')
         ax2.imshow(undist)
         ax2.axis('off')
 
-        fig.tight_layout()
-        plt.savefig('output_images/calibrated_results.png')
+        plt.savefig('output_images/calibrated_results.png',
+                    bbox_inches='tight',
+                    transparent="True", 
+                    pad_inches=0)
         plt.show()
     
-    image_paths = glob('test_images/test*.jpg')
+    image_paths = glob('test_images/test4.jpg')
 
     col = 2
     row = len(image_paths)
     fig = plt.figure(figsize=(5.*col, 3.5*row))
-
     for idx, image_path in enumerate(image_paths):
         image = cv2.imread(image_path)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -68,14 +75,22 @@ if __name__ == '__main__':
         ax1 = fig.add_subplot(row, col, num)
         ax1.set_title("test{}_original".format(idx + 1))
         ax1.axis('off')
+        ax1.set_frame_on(False)
+        ax1.set_xticks([])
+        ax1.set_yticks([])
         ax1.imshow(image)
         # apply calibrator.undist on image
         undist = calibrator.undistort(image)
         ax2 = fig.add_subplot(row, col, num+1)
         ax2.set_title("test{}_undistorted".format(idx + 1))
         ax2.axis('off')
+        ax2.set_frame_on(False)
+        ax2.set_xticks([])
+        ax2.set_yticks([])
         ax2.imshow(undist)
 
-    fig.tight_layout()
-    plt.savefig('output_images/calibrator_results.png')
+    plt.savefig('output_images/calibrator_results.png',
+                bbox_inches='tight',
+                transparent="True", 
+                pad_inches=0)
     plt.show()
