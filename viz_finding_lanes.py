@@ -233,7 +233,7 @@ if __name__ == '__main__':
     ym_per_px = 30. / 720. # meters per pixel in y dimension
     xm_per_px = 3.7 / 700. # meters per pixel in x dimension
 
-    y = np.array(np.linspace(0, 719, num=100))
+    y = np.array(np.linspace(0, 720, num=100))
     y_eval = np.max(y)
 
     # calculate radius of curvature of left lane
@@ -243,7 +243,7 @@ if __name__ == '__main__':
     # calculate radius of curvature of right lane
     r_x = np.array(list(map(right_poly, y)))
     r_cur_coef = np.polyfit(y * ym_per_px, r_x * xm_per_px, 2)
-    r_curverad = ((1 + (2 * r_cur_coef[0] * y_eval / 2. + r_cur_coef[1]) ** 2) ** 1.5) / np.absolute(2 * r_cur_coef[0])
+    r_curverad = ((1 + (2 * r_cur_coef[0] * y_eval + r_cur_coef[1]) ** 2) ** 1.5) / np.absolute(2 * r_cur_coef[0])
     # get average radius of curvature
     curverad = np.mean([l_curverad, r_curverad])
 

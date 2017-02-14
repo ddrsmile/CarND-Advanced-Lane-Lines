@@ -27,7 +27,9 @@ class LaneFinder(object):
 
     def __color_warp(self, image):
         image_zero = np.zeros_like(image).astype(np.uint8)
+        # create a variable with 3 dimension for drawing it on the original image
         color_area = np.dstack((image_zero, image_zero, image_zero))
+        # inverse the order of the points to make left and right points become a circle for CV2 operation.
         pts_left = np.array([np.flipud(np.transpose(np.vstack([self.left.avg_fit_x, self.left.y])))])
         pts_right = np.array([np.transpose(np.vstack([self.right.avg_fit_x, self.right.y]))])
         pts = np.hstack((pts_left, pts_right))
