@@ -126,7 +126,7 @@ for i in range(steps):
 
 ![viz_big_searching_window.png](output_images/viz/viz_big_searching_window.png)
 
-Besides, I added the function to remove the outlier, the points out of `95%` of total points, because I took the histogram of each slide. So that there is the chance that the `base`, center point of the searching window, locates at noisy if there is no lane in this slide. And the figure hightlight the points used to fit the polynomial functions.
+Besides, I added the function `remove_outlier` to remove the outlier, the points out of `95%` of total points, because I took the histogram of each slide. So that there is the chance that the `base`, center point of the searching window, locates at noisy if there is no lane in this slide. And the figure hightlight the points used to fit the polynomial functions.
 
 ![viz_lanehightlight.png](output_images/viz/viz_big_lanehightlight.png)
 
@@ -146,7 +146,7 @@ Fitting polynomial functions are carried out by `polyfit` and `poly1d` **Numpy**
 
 Unlike testing the models with the images, the video output a series of continuous images. I modified `lanefinder` and built `line` model to make final result better.
 
-I added `polynomial_detection` to `lanefinder` to reduce the process of lane finding. This function will be carried out if there are lane lines found in previous image. The main idea is to use fitted polynomial function to calculate x value as new `base` with the **central point** in y direction of the `searching window`. And the following process is the same as that in `histogram_detection`.
+I added `polynomial_detection` to `lanefinder` to reduce time consuming during the process of lane finding. This function will be carried out if there are lane lines found in previous image. The main idea, different from `histogram_detection`, is to use fitted polynomial function to calculate x value as new `base` with the **central point** in y direction of the `searching window`. And similarily, `remove_outlier` was also applied on the results of `polynomial_detection` to prevent the bad influence of noisy.
 
 ### Radius of Curvature and Position in Lane
 
