@@ -46,7 +46,7 @@ As the results shown below, I draw the found corners and showed the undistorted 
 
 **<sub>ptransformer.py</sub>**
 
-`getPerspectiveTransform` was firstly used to calcuate `transform matrix M` with defined source, `src` the area to be transformed from, and destination, `dst` the area that we expect how `src` to be transformed. As the suggestion given by the instruction, it is good option that transform `src` into bird's-eye view as `dst`. Besides, I noticed that how `src` and `dst` are defined would influence on the final result, I eventually defined `src` and `dst` as follows:
+`getPerspectiveTransform` was firstly used to calculate `transform matrix M` with defined source, `src` the area to be transformed from, and destination, `dst` the area that we expect how `src` to be transformed. As the suggestion given by the instruction, it is good option that transform `src` into bird's-eye view as `dst`. Besides, I noticed that how `src` and `dst` are defined would influence on the final result, I eventually defined `src` and `dst` as follows:
 
 |src|dst|
 |---|---|
@@ -136,7 +136,7 @@ Besides, I added the function `remove_outlier` to remove the outlier, the points
 
 **<sub>line.py: update</sub>**
 
-Fitting polynomial functions are carried out by `polyfit` and `poly1d` **Numpy**. We use `polyfit` to fit 2nd order polynomial with the nonzero points found in the `histogram_detection`. The output of `polyfit` is the coefficients of a 2nd order polynomial. For convenience, I used `poly1d` to create the object which take y values as input to calcuate x values. The result of fitting polynomial is shown in the figure below. And I also hightlight the points used to fit the polynomial functions.
+Fitting polynomial functions are carried out by `polyfit` and `poly1d` **Numpy**. We use `polyfit` to fit 2nd order polynomial with the nonzero points found in the `histogram_detection`. The output of `polyfit` is the coefficients of a 2nd order polynomial. For convenience, I used `poly1d` to create the object which take y values as input to calculate x values. The result of fitting polynomial is shown in the figure below. And I also hightlight the points used to fit the polynomial functions.
 
 ![viz_big_fitting_result](output_images/viz/viz_big_fitting_result.png)
 
@@ -147,6 +147,10 @@ Fitting polynomial functions are carried out by `polyfit` and `poly1d` **Numpy**
 Unlike testing the models with the images, the video output a series of continuous images. I modified `lanefinder` and built `line` model to make final result better.
 
 I added `polynomial_detection` to `lanefinder` to reduce time consuming during the process of lane finding. This function will be carried out if there are lane lines found in previous image. The main idea, different from `histogram_detection`, is to use fitted polynomial function to calculate x value as new `base` with the **central point** in y direction of the `searching window`. And similarily, `remove_outlier` was also applied on the results of `polynomial_detection` to prevent the bad influence of noisy.
+
+The main purpose of using `line` is to make the overlay goes smoothly on the road in the video. The idea is to calculate the average x points with the results of current and previous 5 images as the final output of lane finding. As the approach, I stored the coefficients of the fitted polynomial for 5 images. And then to calculate the average coefficients with the current fitted result with 5 previous ones. Finally, to calculate averaged x points as the final output of lanefinding.
+
+One should be noticed is that I added the weight to the coefficients when calculating the average coefficients.
 
 ### Radius of Curvature and Position in Lane
 
