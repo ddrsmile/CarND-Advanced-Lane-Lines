@@ -196,8 +196,6 @@ As the final step, I used `CV2.addWeight` method to draw the inversedly transfor
 
 ![viz_big_final_result](output_images/viz/viz_big_final_result.png)
 
---
-
 ## Discussion
 
 As the experience of working on challenge video, my model might be limited to the project vidoe only because most of the parameters of each model have been tuned as I was focusing on project video. And this model totally failed on challenge video that the situations of the road are more complicated. Besides, I was also struggling on improving the performance that the overlay would go out of lane lines at some parts of the road, especially for the beginning of turning parts. In order to solve this problem, I have looked for lots of information on the internet. And therefore, I learned that not only preprocess of images but also postprocess of the "raw" results are quite important.
@@ -217,8 +215,6 @@ And the follows are the possible solutions that make this model better:
 * Preprocess the images with the techniques like `dilate`, `equalize`.
 * Postprocess the fitted points with the techniques liek `checking the distance between the lane lines`, `checking whether the found points are plausible lines or not`
 * Moving the searching window in x direction for continuous big turning.
-
---
 
 ## Reflection
 
