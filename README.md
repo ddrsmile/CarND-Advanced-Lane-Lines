@@ -200,8 +200,6 @@ As the final step, I used `CV2.addWeight` method to draw the inversedly transfor
 
 ## Discussion
 
-By following the instruction of the lesseon, I successfully resolved most of difficulties I encounter. However, I spent much more time, over 20 hours per week, than what I thought on this project, especially for challenge video. Unfortunately, I eventually failed to make the overlay goes well on the raod in challenge video. With limited knowledge of computer vision and processing images, two weeks is totally not enough for me to complete the project and the challenge.
-
 As the experience of working on challenge video, my model might be limited to the project vidoe only because most of the parameters of each model have been tuned as I was focusing on project video. And this model totally failed on challenge video that the situations of the road are more complicated. Besides, I was also struggling on improving the performance that the overlay would go out of lane lines at some parts of the road, especially for the beginning of turning parts. In order to solve this problem, I have looked for lots of information on the internet. And therefore, I learned that not only preprocess of images but also postprocess of the "raw" results are quite important.
 
 The follows are possible limitation of my models:
@@ -219,5 +217,9 @@ And the follows are the possible solutions that make this model better:
 * Preprocess the images with the techniques like `dilate`, `equalize`.
 * Postprocess the fitted points with the techniques liek `checking the distance between the lane lines`, `checking whether the found points are plausible lines or not`
 * Moving the searching window in x direction for continuous big turning.
+
+## Reflection
+
+By following the instruction of the lesseon, I successfully resolved most of difficulties I encounter. However, I spent much more time, over 20 hours per week, than what I thought on this project, especially for challenge video. Unfortunately, I eventually failed to make the overlay goes well on the raod in challenge video. With limited knowledge of computer vision and processing images, two weeks is totally not enough for me to complete the project and the challenge.
 
 Project video of this project was the challenging video in first project, _**Finding Lane Lines**_. I am happy that I got the satisfied result of this project because I was expecting to learn more about the computer vision to make myself can complete the challenging in project one. As the results of this project, I not only completed the challenge of project 1 but I did better than what I could do in project 1.
