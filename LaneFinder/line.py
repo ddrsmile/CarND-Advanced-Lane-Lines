@@ -42,11 +42,11 @@ class Line(object):
         if cur_poly is None:
             return 0.
         # cover the same range of images
-        y = np.array(np.linspace(0, 719, num=100))
+        y = np.array(np.linspace(0, 720, num=100))
         x = np.array(list(map(cur_poly, y)))
         y_eval = np.max(y)
         cur_poly = np.polyfit(y * ym_per_px, x * xm_per_px, 2)
-        curverad = ((1 + (2 * cur_poly[0] * y_eval / 2. + cur_poly[1]) ** 2) ** 1.5) / np.absolute(2 * cur_poly[0])
+        curverad = ((1 + (2 * cur_poly[0] * y_eval + cur_poly[1]) ** 2) ** 1.5) / np.absolute(2 * cur_poly[0])
         return curverad
 
     def update(self, x, y):

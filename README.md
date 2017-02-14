@@ -150,11 +150,37 @@ I added `polynomial_detection` to `lanefinder` to reduce time consuming during t
 
 The main purpose of using `line` is to make the overlay goes smoothly on the road in the video. The idea is to calculate the average x points with the results of current and previous 5 images as the final output of lane finding. As the approach, I stored the coefficients of the fitted polynomial for 5 images. And then to calculate the average coefficients with the current fitted result with 5 previous ones. Finally, to calculate averaged x points as the final output of lanefinding.
 
-One should be noticed is that I added the weight to the coefficients when calculating the average coefficients.
+One should be noticed is that I added the weight to the coefficients when calculating the average coefficients. This treatment is used to prevent the overlay goes out of the lane lines at the beginning of turning part. The weight is 0.4 for current coefficients and 0.6 for the previous average coefficients.
 
-### Radius of Curvature and Position in Lane
+### Radius of Curvature and Position Offset
 
 **<sub>line.py: curvature, lanefinder.py: process</sub>**
+
+
+#### Radius of Curvature
+The calculation of **the radius of curvature** was built by following [Interactive Mathmetics:  Applications of Differentiation » 8. Radius of Curvature](http://www.intmath.com/applications-differentiation/8-radius-curvature.php). 
+
+```
+radius of curvature = (1 + (dx/dy)^2)^1.5 / (d^2x/dy^2) where x is the output of function y
+```
+
+and we use 2nd order polynomial, whoes formula is `x = a*y^2 + b*y + c`
+
+Therefore the foumula is rewritten as follows:
+
+```
+radius of curvature = (1 + 2*a*y + b)^1.5 / (2*a)
+```
+
+The procedure is shwon below: 
+
+1. Define two converions, `meter per pixel in x direction (xm_per_px)` and `meter per pixel in y direction (ym_per_px)`, whcih are approximately `3.7 / 700` for `xm_per_px` and `30. / 720` for `ym_per_px`.
+2. Get the coefficients in meter unit by fitting the polynomial with x and y points multipled by their conversion.
+3. The radius is calculated nearest to the car which corresponds to y = 720. 
+
+#### Position Offset
+
+This calculation is quite simple that I defined the center is the **centeral point** nearest to the car between left and right lane lines, which is obtained by the fitted polynomial function with the input `y=720`. And the position of the car is the central point of the image, `image.shape[1]//2`. And therefore the offset is calcuated by the formula, `offset = image.shape[1]/2 - poly(720)`.
 
 --
 

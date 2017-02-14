@@ -198,7 +198,7 @@ class LaneFinder(object):
         self.curvature = np.mean([self.left.curvature, self.right.curvature])
         center_poly = (self.left.avg_poly + self.right.avg_poly) /2
         ## set calculated offset to self.offset
-        self.offset = (image.shape[1] / 2 - center_poly(719)) * 3.7 / 700
+        self.offset = (image.shape[1] / 2 - center_poly(720)) * 3.7 / 700
 
         # draw overlay on the image
         orig_image = self.__draw_overlay(image, orig_image)
