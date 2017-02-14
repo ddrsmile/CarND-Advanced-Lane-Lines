@@ -115,7 +115,7 @@ class LaneFinder(object):
 
         return x.astype(np.float32), y.astype(np.float32)
 
-    def remove_outlier(self, x, y, q=5):
+    def remove_outlier(self, x, y, q=0.5):
 
         if len(x) == 0 or len(y) == 0:
             return x, y

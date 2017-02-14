@@ -30,7 +30,7 @@ if __name__ == '__main__':
     ptransformer = PTransformer(src=src, dst=dst)
     masker = Masker()
     lanefinder = LaneFinder(calibrator=calibrator, ptransformer=ptransformer, 
-                            masker=masker, n_image=5, scan_image_steps=10, margin=25)
+                            masker=masker, n_image=5, scan_image_steps=10, margin=50)
     
 
     video_path = sys.argv[1] if len(sys.argv) > 1 else 'videos/project_video.mp4'

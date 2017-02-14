@@ -32,7 +32,7 @@ masker = Masker()
 
 # define the basic parameter for searching lane
 scan_image_steps=10
-margin=25
+margin=50
 nonzerox = None
 nonzeroy = None
 
@@ -113,7 +113,7 @@ def histogram_detection(viz_img, image, search_area, steps, margin=25):
 
     return x.astype(np.float32), y.astype(np.float32)
 
-def remove_outlier(x, y, q=5):
+def remove_outlier(x, y, q=0.5):
 
     if len(x) == 0 or len(y) == 0:
         return x, y
