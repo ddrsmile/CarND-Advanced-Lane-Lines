@@ -15,7 +15,7 @@ As the approach of this project, I built the models cotains following methodolog
 
 ![approach](output_images/approach.png)
 
-Fist of all, `camera calibration` was carried out with the given chessboard images. I defined the source (`src`) area which contains the lane lines I wanted to found by the models and the destination (`dst`) which is used to `perspective transform`. As what instruction suggested, I warpped the images into bird's-eye view. 
+Fist of all, `camera calibration` was carried out with the given chessboard images. I defined the source (`src`) area which contains the lane lines I wanted to found by the models and the destination (`dst`) which is used to `perspective transform`. As what instruction suggested, I warped the images into bird's-eye view. 
 
 For the third step, I applied `Color thresholding` only to extract **yellow** and **white** color. After lots of trial and error, I eventually used **L** channel of **LUV**, **b** channel of **Lab**, **yellow** area of **HVS** and **white** area of **HLS**. I did not use `Sobel thresholding` because I satisfied the results of `Color thresholding`. Hitsogram was performed to find the positions of the lane lins. Rather than using the half of image as the base, I performed histogram to find the lane lines in each window. After the lane lines are found as the points, I fitted the points with polynomial. And then I calculated the radius of curvature and the position offset with the fitted polynomial functions. 
 
@@ -23,7 +23,7 @@ As the final results, I drew the overlay made by fuond lane lines and put the in
 
 ### Result
 
-[![project_video_result](output_images/project_video_result.gif)](https://youtu.be/iCOmGSDvGCc)
+[![project_video_result](output_images/project_video_result.gif)](https://youtu.be/QppNfTrM9dY)
 
 click the image for **youtube** videos
 
@@ -57,7 +57,7 @@ As the results shown below, I draw the found corners and showed the undistorted 
 
 After `transform matrix M` was obtained, `warpPerspective` is used to transform the image into bird's-eye view. And the follows are the example that how perspective transform changes the images.
 
-And in the final step, we have to inverse the transformation for bird's-eye view into its original view. The approach is quite simple that set the `dst` as the **new** `src` and the `src` as the new `dst`. Input new `src` and new `dst` to `getPerspectiveTransform` again. Then we can get a **new** `transform matrix M` as the `inverse transform matrix inv-M`. The results of inversed transform would be shown in very end of this report.
+And in the final step, we have to inverse the transformation for bird's-eye view into its original view. The approach is quite simple that set the `dst` as the **new** `src` and the `src` as the new `dst`. Input new `src` and new `dst` to `getPerspectiveTransform` again. Then we can get a **new** `transform matrix M` as the `inversed transform matrix inv-M`. The results of inversed transform would be shown in very end of this report.
 
 ![perspective_transform_results](output_images/perspective_transform_results.png)
 
@@ -188,6 +188,20 @@ This calculation is quite simple that I defined the center is the **centeral poi
 
 **<sub>lanefinder.py: __put_text, __draw_overlay</sub>**
 
+Before drawing the results as overlay on the image, I firstly hightlighted the lanelines and fill the color in the area between the lane lines. And then I inversedly transformed the warped, masked and highlighted image like the image shown below. I also mentioned inversed transform in section [Perspective Transform](#perspective-transform)
+
+![viz_big_inv_transform_color_area](output_images/viz/viz_big_inv_transform_color_area.png)
+
+As the final step, I used `CV2.addWeight` method to draw the inversedly transformed image on the original image and put the information of `radius of curvature` and `position offset` on the original image by using `CV2.putText` method. The iamge of final output of lanefiding is shown below.
+
+![viz_big_final_result](output_images/viz/viz_big_final_result.png)
+
 --
 
 ## Reflection
+
+By following the instruction of the lesseon, I successfully resolved most of difficulties I encounter. However, I spent much more time, over 20 hours per week, than what I thought on this project, especially for challenge video. Unfortunately, I eventually failed to make the overlay goes well on the raod in challenge video. With limited knowledge of computer vision and processing images, two weeks is totally not enough for me to complete the project and the challenge.
+
+As the experience of working on challenge video, my model might be limited to the project vidoe only because most of the parameters of each model have been tuned as I was focusing on project video. And this model totally failed on challenge video that the situations of the road are more complicated. Besides, I was also struggling on improving the performance that the overlay would go out of lane lines at some parts of the road, especially for the beginning of turning parts. In order to solve this problem, I have looked for lots of information on the internet. And therefore, I learned that not only preprosees of images but also postprocess of the "raw" results are quite important.
+
+Project video of this project was the challenging video in first project, _**Finding Lane Lines**_. I am happy that I got the satisfied result of this project because I was expecting to learn more about the computer vision to make myself can complete the challenging in project one. As the results of this project, I not only completed the challenge of project 1 but I did better than what I could do in project 1.
