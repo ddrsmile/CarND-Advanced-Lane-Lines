@@ -218,6 +218,8 @@ And the follows are the possible solutions that make this model better:
 * Postprocess the fitted points with the techniques liek `checking the distance between the lane lines`, `checking whether the found points are plausible lines or not`
 * Moving the searching window in x direction for continuous big turning.
 
+--
+
 ## Reflection
 
 By following the instruction of the lesseon, I successfully resolved most of difficulties I encounter. However, I spent much more time, over 20 hours per week, than what I thought on this project, especially for challenge video. Unfortunately, I eventually failed to make the overlay goes well on the raod in challenge video. With limited knowledge of computer vision and processing images, two weeks is totally not enough for me to complete the project and the challenge.
