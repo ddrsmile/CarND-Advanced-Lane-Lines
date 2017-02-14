@@ -32,7 +32,7 @@ masker = Masker()
 
 # define the basic parameter for searching lane
 scan_image_steps=10
-margin=50
+margin=25
 nonzerox = None
 nonzeroy = None
 
